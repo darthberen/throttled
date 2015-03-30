@@ -1,7 +1,7 @@
 // Package throttled implements various helpers to manage the lifecycle of goroutines.
 package throttled
 
-// WaitGroup limits the number of concurrent goroutines.
+// WaitGroup limits the number of concurrent goroutines that can execute at once.
 type WaitGroup struct {
 	throttle    int
 	completed   chan bool
@@ -18,24 +18,24 @@ func NewWaitGroup(throttle int) *WaitGroup {
 }
 
 // Add will block until the number of goroutines being throttled
-// has fallen below the throttle
+// has fallen below the throttle.
 func (w *WaitGroup) Add() {
-	if w.outstanding+1 > w.throttle {
+	w.outstanding++
+	if w.outstanding > w.throttle {
 		select {
 		case <-w.completed:
 			w.outstanding--
 			return
 		}
 	}
-	w.outstanding++
 }
 
-// Done signal that a goroutine has completed
+// Done signal that a goroutine has completed.
 func (w *WaitGroup) Done() {
 	w.completed <- true
 }
 
-// Wait until all of the throttled goroutines have signaled they are done
+// Wait until all of the throttled goroutines have signaled they are done.
 func (w *WaitGroup) Wait() {
 	if w.outstanding == 0 {
 		return
