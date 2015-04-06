@@ -17,6 +17,11 @@ func NewWaitGroup(throttle int) *WaitGroup {
 	}
 }
 
+// PeekThrottled returns true if the next Add() call would block
+func (w *WaitGroup) PeekThrottled() bool {
+	return w.outstanding+1 > w.throttle
+}
+
 // Add will block until the number of goroutines being throttled
 // has fallen below the throttle.
 func (w *WaitGroup) Add() {
@@ -30,7 +35,8 @@ func (w *WaitGroup) Add() {
 	}
 }
 
-// Done signal that a goroutine has completed.
+// Done signal that a goroutine has completed. This will block if you
+// not call Add() before calling Done().
 func (w *WaitGroup) Done() {
 	w.completed <- true
 }
